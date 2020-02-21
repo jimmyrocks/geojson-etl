@@ -18,10 +18,16 @@ module.exports = function(options) {
         .format('GeoJSON')
         .stream();
 
+      // console.log(readStream);
+      // readStream.pipe(process.stdout);
       readStream.on('error', e => callbackPromise.rej(e));
       readStream.on('end', d => callbackPromise.res(d));
     },
-    'stream': readStream,
-    'promise': promise
+    'stream': function() {
+      return readStream;
+    },
+    'promise': function() {
+      return promise;
+    }
   };
 };
