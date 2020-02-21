@@ -4,7 +4,7 @@ const {
 } = require('pg');
 const wkx = require('wkx');
 
-var sqlite = function (options) {
+var postgres = function (options) {
   // Function level variables
 
   var pool; // The database pooled client
@@ -153,4 +153,4 @@ var sqlite = function (options) {
   };
 };
 
-module.exports = sqlite;
+module.exports = postgres;
