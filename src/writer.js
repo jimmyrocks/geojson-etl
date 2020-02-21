@@ -1,12 +1,24 @@
 /* eslint-env node, es6 */
 const Writers = {
   file: require('./writers/file.js'),
+  // ogr2ogr: require('./writers/ogr2ogr.js'),
   postgres: require('./writers/postgres.js'),
   sqlite: require('./writers/sqlite.js'),
   stdout: require('./writers/stdout.js')
 };
 
-var GeoJsonWriter = function (options) {
+const {
+  Writable
+} = require('stream');
+
+var Writer = function(type) {
+  return function(options) {
+    options.type = type;
+    return geojsonWriter(options);
+  };
+};
+
+var geojsonWriter = function(options) {
   var header = '{"type": "FeatureCollection", "features": [';
   var footer = ']}';
   var bboxFooter = '], "bbox":{bbox}}';
@@ -29,8 +41,26 @@ var GeoJsonWriter = function (options) {
   var closed = false;
   var first = true;
 
-  return {
-    writeHeader: function () {
+  var writeLine = function(line) {
+    var returnValue;
+    if (hasHeader && !hasFooter && !closed) {
+      returnValue = writer.write((first ? '' : delimiter) + line);
+      first = false;
+      return returnValue;
+    } else {
+      throw new Error('Line cannot be written: hasHeader:' + hasHeader + ' hasFooter:' + hasFooter + ' closed:' + closed);
+    }
+  };
+
+  var outStream = new Writable({
+    write(chunk, encoding, callback) {
+      writeLine(chunk);
+      callback();
+    }
+  });
+
+  var fns = {
+    open: function() {
       if (first && !hasHeader && !closed) {
         hasHeader = true;
         return writer.write(header);
@@ -38,26 +68,22 @@ var GeoJsonWriter = function (options) {
         throw new Error('Header already added');
       }
     },
-    writeFooter: function (bbox) {
+    save: function() {
+      if (hasHeader && !hasFooter && !closed) {
+        return writer.save();
+      } else {
+        throw new Error('Cannot save');
+      }
+    },
+    writeLine: writeLine,
+    close: function(bbox) {
       var thisFooter = bbox ? bboxFooter.replace('{bbox}', JSON.stringify(bbox)) : footer;
       if (hasHeader && !hasFooter && !closed) {
         hasFooter = true;
-        return writer.write(thisFooter);
+        writer.write(thisFooter);
       } else {
         throw new Error(hasFooter ? 'Footer already added' : 'No header exists');
       }
-    },
-    writeLine: function (line) {
-      var returnValue;
-      if (hasHeader && !hasFooter && !closed) {
-        returnValue = writer.write((first ? '' : delimiter) + line);
-        first = false;
-        return returnValue;
-      } else {
-        throw new Error('Line cannot be written: hasHeader:' + hasHeader + ' hasFooter:' + hasFooter + ' closed:' + closed);
-      }
-    },
-    close: function () {
       if (!closed) {
         closed = true;
         return writer.close();
@@ -65,20 +91,18 @@ var GeoJsonWriter = function (options) {
         throw new Error(options.type + ' already closed');
       }
     },
-    save: function () {
-      if (hasHeader && !hasFooter && !closed) {
-        return writer.save();
-      } else {
-        throw new Error('Cannot save');
-      }
-    },
     stream: writer.stream,
     promise: writer.promise || {
-      'then': function (callback) {
+      'then': function(callback) {
         return callback();
       }
     }
   };
+
+  for (var fn in fns) {
+    outStream[fn] = fns[fn];
+  }
+  return outStream;
 };
 
-module.exports = GeoJsonWriter;
+module.exports = Writer;
