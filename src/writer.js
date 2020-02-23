@@ -11,19 +11,13 @@ const {
   Writable
 } = require('stream');
 
-var Writer = function(type) {
-  return function(options) {
-    options.type = type;
-    return geojsonWriter(options);
-  };
-};
 
-var geojsonWriter = function(options) {
+var Writer = function(options) {
   var header = '{"type": "FeatureCollection", "features": [';
   var footer = ']}';
   var bboxFooter = '], "bbox":{bbox}}';
   var delimiter = ',';
-
+  
   // Set default options to stdout
   options = options || {};
   options.type = options.type || 'stdout';
@@ -41,22 +35,10 @@ var geojsonWriter = function(options) {
   var closed = false;
   var first = true;
 
-  var writeLine = function(line) {
-    var returnValue;
-    if (hasHeader && !hasFooter && !closed) {
-      returnValue = writer.write((first ? '' : delimiter) + line);
-      first = false;
-      return returnValue;
-    } else {
-      throw new Error('Line cannot be written: hasHeader:' + hasHeader + ' hasFooter:' + hasFooter + ' closed:' + closed);
-    }
-  };
-
-  var outStream = new Writable({
-    write(chunk, encoding, callback) {
-      writeLine(chunk);
-      callback();
-    }
+  var callbackPromise = {};
+  var promise = new Promise((res, rej) => {
+    callbackPromise.res = res;
+    callbackPromise.rej = rej;
   });
 
   var fns = {
@@ -75,7 +57,16 @@ var geojsonWriter = function(options) {
         throw new Error('Cannot save');
       }
     },
-    writeLine: writeLine,
+    writeLine: function(line) {
+      var returnValue;
+      if (hasHeader && !hasFooter && !closed) {
+        returnValue = writer.write((first ? '' : delimiter) + line);
+        first = false;
+        return returnValue;
+      } else {
+        throw new Error('Line cannot be written: hasHeader:' + hasHeader + ' hasFooter:' + hasFooter + ' closed:' + closed);
+      }
+    },
     close: function(bbox) {
       var thisFooter = bbox ? bboxFooter.replace('{bbox}', JSON.stringify(bbox)) : footer;
       if (hasHeader && !hasFooter && !closed) {
@@ -91,13 +82,32 @@ var geojsonWriter = function(options) {
         throw new Error(options.type + ' already closed');
       }
     },
-    stream: writer.stream,
-    promise: writer.promise || {
-      'then': function(callback) {
-        return callback();
-      }
+    streamReader: function(reader) {
+      reader.open();
+      reader.stream().pipe(outStream);
+      reader.stream().on('end', () => fns.save());
+      reader.promise().then(r => {
+        fns.close();
+        callbackPromise.res(r);
+      }).catch(e => callbackPromise.rej(e));
+      return promise;
+    },
+    promise: function() {
+      return promise;
     }
   };
+
+  var outStream = new Writable({
+    write(chunk, encoding, callback) {
+      first && !hasHeader && !closed && fns.open();
+      chunk.toString().split('\n').forEach(line => {
+        // if (line.match(new RegExp(' {0,}{ {0,}"type": {0,}"Feature".+?},?$'))) {
+        fns.writeLine(line); //.replace(/, {0,}$/,''));
+        // }
+      });
+      callback();
+    }
+  });
 
   for (var fn in fns) {
     outStream[fn] = fns[fn];
