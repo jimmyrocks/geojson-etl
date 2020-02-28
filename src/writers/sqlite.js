@@ -100,6 +100,8 @@ var sqlite = function (options) {
     try {
       geojson = JSON.parse(buffer);
       buffer = '';
+      // console.log(geojson.geometry);
+      // var hasType = geojson.geometry.type;
     } catch (e) {
       return e;
     }
@@ -128,7 +130,6 @@ var sqlite = function (options) {
       runBacklog();
     }
   };
-
 
   return {
     'open': open,

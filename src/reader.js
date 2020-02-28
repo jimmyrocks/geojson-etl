@@ -1,11 +1,12 @@
 const types = {
-  'ogr2ogr': require('./readers/ogr2ogr')
+  'ogr2ogr': require('./readers/ogr2ogr'),
+  'esriRest': require('./readers/esriRest')
 };
 const Stream = require('stream');
 
 module.exports = function(options) {
 
-  var readStream = new Stream.Writable();
+  var readStream = new Stream.Readable();
   var callbackPromise = {};
   var promise = new Promise((
     res,

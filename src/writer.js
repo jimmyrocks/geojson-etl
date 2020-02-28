@@ -17,7 +17,7 @@ var Writer = function(options) {
   var footer = ']}';
   var bboxFooter = '], "bbox":{bbox}}';
   var delimiter = ',';
-  
+
   // Set default options to stdout
   options = options || {};
   options.type = options.type || 'stdout';
@@ -54,6 +54,7 @@ var Writer = function(options) {
       if (hasHeader && !hasFooter && !closed) {
         return writer.save();
       } else {
+        console.error((!hasHeader && 'No Header') || (hasFooter && 'Already Has Footer') || (closed && 'Already Closed'));
         throw new Error('Cannot save');
       }
     },
@@ -100,12 +101,17 @@ var Writer = function(options) {
   var outStream = new Writable({
     write(chunk, encoding, callback) {
       first && !hasHeader && !closed && fns.open();
-      chunk.toString().split('\n').forEach(line => {
-        // if (line.match(new RegExp(' {0,}{ {0,}"type": {0,}"Feature".+?},?$'))) {
-        fns.writeLine(line); //.replace(/, {0,}$/,''));
-        // }
-      });
+      try {
+        chunk.toString().split('\n').forEach(line => {
+          // if (line.match(new RegExp(' {0,}{ {0,}"type": {0,}"Feature".+?},?$'))) {
+          fns.writeLine(line); //.replace(/, {0,}$/,''));
+          // }
+        });
+      } catch (e) {
+        console.error('writer e', e);
+      }
       callback();
+      return 'good';
     }
   });
 
