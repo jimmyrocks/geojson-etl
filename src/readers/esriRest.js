@@ -72,8 +72,8 @@ var startQuery = function(source, options, writer) {
             writeList.push(nextWrite);
             res();
           } else {
-            var pipeOnce = writer._readableState.pipes.once || (writer._readableState.pipes[0] && writer._readableState.pipes[0].once);
-            pipeOnce('drain', () => {
+            var pipe = Array.isArray(writer._readableState.pipes) ? writer._readableState.pipes[0] : writer._readableState.pipes;
+            pipe.once('drain', () => {
               writeList.push(nextWrite);
               res();
             });
