@@ -5,7 +5,7 @@ const terraformer = require('terraformer-arcgis-parser');
 const Stream = require('stream');
 
 module.exports = function(options) {
-  options['features-count'] = isNaN(parseInt(options['features-count', 10])) ? undefined : parseInt(options['features-count'], 11);
+  options['feature-count'] = isNaN(parseInt(options['feature-count', 10])) ? undefined : parseInt(options['feature-count'], 11);
   /* Options
    * * connectionString: URL to the resource
    * * options:
@@ -72,6 +72,9 @@ var startQuery = function(source, options, writer) {
             writeList.push(nextWrite);
             res();
           } else {
+            // console.error('backpressure! *************************************************');
+            // console.error(writer);
+            // console.error('backpressure! *************************************************');
             writer._readableState.pipes.once('drain', () => {
               writeList.push(nextWrite);
               res();
