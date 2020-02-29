@@ -72,10 +72,8 @@ var startQuery = function(source, options, writer) {
             writeList.push(nextWrite);
             res();
           } else {
-            // console.error('backpressure! *************************************************');
-            // console.error(writer);
-            // console.error('backpressure! *************************************************');
-            writer._readableState.pipes.once('drain', () => {
+            var pipeOnce = writer._readableState.pipes.once || (writer._readableState.pipes[0] && writer._readableState.pipes[0].once);
+            pipeOnce('drain', () => {
               writeList.push(nextWrite);
               res();
             });
