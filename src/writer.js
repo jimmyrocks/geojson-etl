@@ -60,7 +60,7 @@ var Writer = function(options) {
     },
     writeLine: function(line) {
       var returnValue;
-      console.error('writing line:', line);
+      // console.error('writing line:', line);
       if (hasHeader && !hasFooter && !closed) {
         if (line.length) {
           returnValue = writer.write((first ? '' : delimiter) + line);
