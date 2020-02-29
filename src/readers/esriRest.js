@@ -5,7 +5,7 @@ const terraformer = require('terraformer-arcgis-parser');
 const Stream = require('stream');
 
 module.exports = function(options) {
-  options['feature-count'] = isNaN(parseInt(options['feature-count', 10])) ? undefined : parseInt(options['feature-count'], 11);
+  options['feature-count'] = isNaN(parseInt(options['feature-count'], 10)) ? undefined : parseInt(options['feature-count'], 10);
   /* Options
    * * connectionString: URL to the resource
    * * options:
