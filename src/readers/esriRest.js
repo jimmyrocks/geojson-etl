@@ -146,6 +146,7 @@ var startQuery = function(source, options, writer) {
     extent.min = extent.min === undefined ? 0 : extent.min;
     extent.max = extent.max === undefined ? options['feature-count'] : extent.max;
 
+    esriOptions.where = esriOptions.where || '1=1';
     esriOptions.orderByFields = fields.map(f => '"' + f + '"').join(',');
     esriOptions.outFields = esriOptions.outFields || '*';
     esriOptions.returnGeometry = true;
@@ -172,7 +173,7 @@ var startQuery = function(source, options, writer) {
             }
           } else {
             errorCount--;
-            // console.error('errored out');
+            console.error('errored out', data);
             queueNextQuery(url, esriOptions, fields, true, terminalQuery).then(() => resolve());
           }
         });
@@ -203,7 +204,7 @@ var startQuery = function(source, options, writer) {
     'name': 'First Query',
     'description': 'Starts off the query',
     'task': runQuery,
-    'params': [options.connectionString, options.esriOptions, fields, source.extent]
+    'params': [options.connectionString, options.esriOptions || {}, fields, source.extent]
   });
 
   runList(tasklist)
