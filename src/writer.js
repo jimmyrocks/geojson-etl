@@ -60,8 +60,11 @@ var Writer = function(options) {
     },
     writeLine: function(line) {
       var returnValue;
+      console.error('writing line:', line);
       if (hasHeader && !hasFooter && !closed) {
-        returnValue = writer.write((first ? '' : delimiter) + line);
+        if (line.length) {
+          returnValue = writer.write((first ? '' : delimiter) + line);
+        }
         first = false;
         return returnValue;
       } else {
