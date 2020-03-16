@@ -149,6 +149,7 @@ var startQuery = function(source, options, writer) {
     extent.max = extent.max === undefined ? options['feature-count'] : extent.max;
 
     esriOptions.where = esriOptions.where || '1=1';
+    esriOptions.outSR = esriOptions.outSR || '4326';
     esriOptions.orderByFields = fields.map(f => '"' + f + '"').join(',');
     esriOptions.outFields = esriOptions.outFields || '*';
     esriOptions.returnGeometry = true;
