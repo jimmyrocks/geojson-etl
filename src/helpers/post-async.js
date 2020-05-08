@@ -3,6 +3,7 @@
 const superagent = require('superagent');
 
 var postAsync = function (url, query) {
+  console.log('url', url, query);
   return new Promise(function (resolve, reject) {
     superagent.post(url)
       .set('Accept', 'application/json')
@@ -12,7 +13,7 @@ var postAsync = function (url, query) {
         try {
           body = JSON.parse(res.text);
         } catch (e) {
-          e.text = res.text;
+          e.text = res && res.text;
           err = err || e;
         }
         if (err) {

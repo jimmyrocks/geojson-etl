@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "app.js",
   "bin": {
-    "esri-stream": "stream.js"
+    "copy": "app.js"
   },
   "dependencies": {
     "command-line-args": "^5.1.1",
